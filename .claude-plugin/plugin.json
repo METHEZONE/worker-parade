@@ -1,6 +1,6 @@
 {
   "name": "worker-parade",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Shows running background subagents as walking characters above the Claude Code prompt",
   "license": "MIT",
   "types": "./types/index.d.ts"

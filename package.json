@@ -1,6 +1,6 @@
 {
   "name": "worker-parade",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Is my background coding agent still working, stuck, or done? A zero-token live view of Claude Code subagents.",
   "license": "MIT",
   "type": "module",

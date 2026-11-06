@@ -1,15 +1,25 @@
 {
-  "manifestVersion": 1,
+  "manifestVersion": 2,
   "id": "worker-parade",
-  "publisher": "METHEZONE",
   "name": "Worker Parade",
-  "version": "0.3.0",
-  "description": "Shows Claude Code background subagents as walking characters. parade.mjs rewrites panel.html to update the panel.",
-  "engines": { "orca": ">=1.4.0" },
+  "version": "0.3.1",
+  "description": "Shows Claude Code background subagents as walking characters. Its worker tails the local transcripts; the panel patches itself in place.",
+  "engines": {
+    "orca": ">=1.4.246"
+  },
+  "execution": "trusted-worker",
   "pluginApi": 1,
+  "main": "worker.mjs",
+  "repository": "https://github.com/METHEZONE/worker-parade",
+  "license": "MIT",
   "contributes": {
     "panels": [
-      { "id": "parade", "title": "Worker Parade", "icon": "footprints", "entry": "panel.html" }
+      {
+        "id": "parade",
+        "title": "Worker Parade",
+        "icon": "activity",
+        "entry": "panel.html"
+      }
     ]
   },
   "capabilities": []

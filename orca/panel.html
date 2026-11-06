@@ -1,0 +1,94 @@
+<!doctype html>
+<!-- Static page: Orca reloads a panel whenever its files change, so nothing rewrites this file.
+     Data comes from the plugin's worker (worker.mjs) over plugin.request; patch.mjs edits the DOM in place. -->
+<html><head><meta charset="utf-8"><title>Worker Parade</title>
+<style>
+  :root { --fg: var(--orca-foreground, var(--foreground, #222)); --mute: var(--orca-muted-foreground, var(--muted-foreground, #888)); --line: var(--orca-border, var(--border, #e5e5e5)); --cardbg: var(--orca-card, var(--card, transparent)); }
+  body { margin: 0; padding: 12px 12px 16px; font: 13px/1.45 -apple-system, "Pretendard Variable", Pretendard, sans-serif; color: var(--fg); background: var(--orca-background, transparent); }
+  header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  header b { font-size: 13px; } header span { color: var(--mute); font-size: 11px; }
+  [hidden] { display: none !important; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .w { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px 9px; background: var(--cardbg); }
+  .track { position: relative; height: 32px; margin-bottom: 4px; overflow: hidden; }
+  .trail { position: absolute; left: 0; right: 0; bottom: 3px; height: 2px; background-image: radial-gradient(circle, var(--mute) 1px, transparent 1.5px); background-size: 8px 2px; opacity: .45; }
+  .walker { position: absolute; bottom: 4px; left: 0; width: 100%; animation: stroll 7s linear infinite alternate; }
+  .walker .buddy { animation: flip 14s steps(1) infinite; }
+  .running .walker { animation-play-state: running; }
+  .done .walker, .quiet .walker { animation: none; left: auto; right: 6px; width: auto; }
+  @keyframes stroll { from { transform: translateX(0); } to { transform: translateX(calc(100% - 30px)); } }
+  @keyframes flip { 0% { transform: scaleX(1); } 50% { transform: scaleX(-1); } }
+  .buddy { position: relative; width: 26px; height: 20px; border-radius: 12px 12px 8px 8px; background: var(--c, #d97757); box-shadow: inset 0 -3px 0 rgba(0,0,0,.12); }
+  .running .buddy { animation: bob .5s ease-in-out infinite; }
+  .walker .buddy { display: inline-block; }
+  @keyframes bob { 50% { margin-bottom: 3px; } }
+  .eye { position: absolute; top: 6px; width: 3px; height: 5px; border-radius: 2px; background: #1a1a1a; animation: blink 4s infinite; }
+  .eye.l { left: 7px; } .eye.r { right: 7px; }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  .foot { position: absolute; bottom: -3px; width: 7px; height: 4px; border-radius: 3px; background: var(--c, #d97757); filter: brightness(.8); }
+  .foot.l { left: 4px; } .foot.r { right: 4px; }
+  .running .foot.l { animation: step .5s ease-in-out infinite; } .running .foot.r { animation: step .5s ease-in-out infinite reverse; }
+  @keyframes step { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+  .done .eye { height: 3px; top: 7px; border-radius: 3px 3px 0 0; background: none; border: 2px solid #1a1a1a; border-bottom: 0; width: 4px; animation: none; }
+  .quiet .buddy { filter: grayscale(1) opacity(.6); } .quiet .eye { animation: none; height: 1.5px; top: 8px; }
+  .spark { position: absolute; top: -2px; right: 30px; font-size: 11px; color: #3a9d5d; }
+  .m-haiku { --c: #7cc79a; } .m-sonnet { --c: #8b8cf0; } .m-opus { --c: #d97757; } .m-fable { --c: #e58fb6; }
+  .desc { font-weight: 600; } .sub, .live { color: var(--mute); font-size: 11.5px; } .live b { color: var(--fg); font-weight: 500; }
+  .done .desc, .quiet .desc { color: var(--mute); font-weight: 500; }
+  .empty { text-align: center; padding: 28px 0 12px; color: var(--mute); }
+  .empty .buddy { margin: 0 auto 12px; --c: #c9c9c9; } .empty .eye { height: 1.5px; top: 8px; animation: none; }
+  .empty .buddy::after { content: "z z"; position: absolute; top: -14px; right: -14px; font-size: 10px; color: var(--mute); animation: zz 2.4s ease-in-out infinite; }
+  @keyframes zz { 50% { transform: translateY(-4px); opacity: .5; } }
+  .empty p { margin: 0; color: var(--fg); } .empty small { font-size: 11px; }
+  .feed { margin-top: 3px; font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--mute); }
+  .feed div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .55; }
+  .feed div:last-child { opacity: 1; color: var(--fg); }
+  .feed div:last-child::before { content: '▸ '; }
+  .w { animation: enter .32s ease-out; transition: opacity .32s ease, transform .32s ease; }
+  .w.leaving { opacity: 0; transform: translateY(-4px); pointer-events: none; }
+  @keyframes enter { from { opacity: 0; transform: translateY(4px); } }
+</style></head>
+<body>
+  <header><b id="count">🐾 0 working</b><span id="now"></span></header>
+  <ul id="list"></ul>
+  <div class="empty" id="empty" hidden><div class="buddy sleep"><i class="eye l"></i><i class="eye r"></i></div><p>No background agents right now</p><small>They will walk around here when they start</small></div>
+<script type="module">
+  import { createParade } from './patch.mjs'
+  const POLL_MS = 1500
+  const mount = Math.random().toString(36).slice(2, 8)
+  document.body.dataset.mount = mount
+  console.log('worker-parade panel mounted ' + mount)
+  const $ = id => document.getElementById(id)
+  const update = createParade($('list'))
+  let workers = []
+
+  function fmt(ms) { const s = Math.max(0, Math.round(ms / 1000)); return s < 60 ? s + 's' : Math.floor(s / 60) + 'm ' + (s % 60) + 's' }
+  function tick() {
+    const now = Date.now()
+    document.querySelectorAll('.t').forEach(el => { const v = fmt((+el.dataset.end || now) - +el.dataset.start); if (el.textContent !== v) el.textContent = v })
+    const v = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    if ($('now').textContent !== v) $('now').textContent = v
+  }
+  function show(next) {
+    workers = next
+    update(workers)
+    const running = workers.filter(w => w.status === 'running').length
+    const done = workers.filter(w => w.status === 'done').length
+    const head = '🐾 ' + running + ' working' + (done ? ' · ' + done + ' done' : '')
+    if ($('count').textContent !== head) $('count').textContent = head
+    $('list').hidden = !workers.length
+    $('empty').hidden = !!workers.length
+    tick()
+  }
+  async function poll() {
+    try {
+      show(await orca.plugin.request('parade.workers'))
+    } catch (e) {
+      console.error('worker-parade: ' + (e.code || '') + ' ' + e.message) // keep the last good view
+    }
+    setTimeout(poll, POLL_MS)
+  }
+  setInterval(tick, 1000)
+  poll()
+</script>
+</body></html>

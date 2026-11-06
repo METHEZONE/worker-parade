@@ -39,13 +39,16 @@ From a clone: `node bin/parade.mjs watch`. Add `--demo` to try it with sample da
 /plugin install worker-parade@worker-parade
 ```
 
-**Orca panel.** Copy `orca/` into Orca's plugins folder as `worker-parade/`, then keep the writer running:
+**Orca panel** (Orca 1.4.246+). Load the `orca/` folder; it imports `../core`, so keep `core/` next to it (as in this repo):
 
 ```bash
-node ~/orca/plugins/worker-parade/parade.mjs   # rewrites panel.html every 1.5s when something changes
+git clone https://github.com/METHEZONE/worker-parade && cd worker-parade
+orca plugin dev load ./orca --json    # prints an approval fingerprint (it runs a local Node worker)
+orca plugin dev load ./orca --json --approve <fingerprint>
+orca plugin open local.worker-parade --panel parade
 ```
 
-The writer imports `../core`, so copy `core/` next to `orca/` (same layout as this repo).
+The plugin's own worker tails the transcripts and the panel asks it for updates every 1.5s, patching cards in place. Nothing to keep running. (0.3.0 used an external `parade.mjs` writer that rewrote `panel.html`, which made Orca reload the panel on every change; stop it if you had it running.)
 
 ## Zero token cost, local only
 
@@ -57,14 +60,15 @@ worker-parade never calls a model and never touches the network. It tails the tr
 core/activity.mjs   one tool call -> one short redacted line (pure)
 core/parade.mjs     transcript scanner -> worker records
 core/text.mjs       terminal renderer          -> bin/parade.mjs
-orca/parade.mjs     panel.html writer          -> Orca panel
+orca/worker.mjs     Orca plugin worker: scanner -> panel on request
+orca/panel.html     static Orca panel; orca/patch.mjs updates cards in place by id
 hooks/register.tsx  Claude Code plugin band    (uses core/activity.mjs)
 ```
 
 ## Develop
 
 ```bash
-npm test                          # parser, redaction, scanner, renderer
+npm test                          # parser, redaction, scanner, renderer, panel patcher
 claude plugin test .              # the Claude Code plugin's own tests
 node tools/make-demo.mjs          # regenerate docs/demo.* (needs playwright + ffmpeg)
 ```
