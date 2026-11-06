@@ -1,0 +1,16 @@
+{
+  "manifestVersion": 1,
+  "id": "worker-parade",
+  "publisher": "METHEZONE",
+  "name": "Worker Parade",
+  "version": "0.3.0",
+  "description": "Shows Claude Code background subagents as walking characters. parade.mjs rewrites panel.html to update the panel.",
+  "engines": { "orca": ">=1.4.0" },
+  "pluginApi": 1,
+  "contributes": {
+    "panels": [
+      { "id": "parade", "title": "Worker Parade", "icon": "footprints", "entry": "panel.html" }
+    ]
+  },
+  "capabilities": []
+}

@@ -1,0 +1,7 @@
+{"type":"user","timestamp":"2026-01-01T10:00:00.000Z","message":{"role":"user","content":"do the thing"}}
+{"type":"assistant","timestamp":"2026-01-01T10:00:01.000Z","message":{"model":"claude-sonnet-5-5","content":[{"type":"text","text":"thinking"},{"type":"tool_use","name":"Read","input":{"file_path":"/home/dev/app/src/router.ts"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","content":"SECRET FILE CONTENTS sk-abcdef1234567890"}]}}
+{"type":"assistant","message":{"model":"claude-sonnet-5-5","content":[{"type":"tool_use","name":"Bash","input":{"command":"curl -H 'Authorization: Bearer abcdefghijklmnop1234' https://api.example.com","description":"Call the API"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"export GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123456789 && npm test --silent --reporter=verbose --long-flag"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"WebSearch","input":{"query":"node test runner docs"}},{"type":"tool_use","name":"Agent","input":{"description":"Check the docs","prompt":"long secret prompt"}}]}}
+not json at all

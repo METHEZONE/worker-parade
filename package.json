@@ -1,0 +1,12 @@
+{
+  "name": "worker-parade",
+  "version": "0.3.0",
+  "description": "Is my background coding agent still working, stuck, or done? A zero-token live view of Claude Code subagents.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "worker-parade": "bin/parade.mjs" },
+  "files": ["bin", "core", "orca", "hooks", "types", ".claude-plugin/plugin.json", ".claude-plugin/marketplace.json"],
+  "engines": { "node": ">=18" },
+  "scripts": { "test": "node --test test/*.test.mjs", "demo": "node bin/parade.mjs watch --demo" },
+  "repository": "github:METHEZONE/worker-parade"
+}
